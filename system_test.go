@@ -23,7 +23,6 @@ func getAboutTest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("getAbout failed: %v", err)
 	}
-	// fmt.Printf("%+v", sys)
 
 	fmt.Println("getAboutTest Leave")
 }

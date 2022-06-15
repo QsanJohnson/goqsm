@@ -1,3 +1,5 @@
+// @2022 QSAN Inc. All rights reserved
+
 package goqsm
 
 import (
@@ -12,38 +14,38 @@ import (
 	"github.com/golang/glog"
 )
 
-// Client .
+// QSM client without authentication
 type Client struct {
 	apiKey     string
 	baseURL    string
 	HTTPClient *http.Client
 }
 
+// QSM client with authentication
 type AuthClient struct {
 	Client
 	accessToken  string
 	refreshToken string
 }
 
+// For authentication
 type AuthRes struct {
 	AccessToken  string `json:"accessToken"`
 	ExpireTime   int    `json:"expireTime"`
 	RefreshToken string `json:"refreshToken"`
 }
 
+// Empty response data
 type EmptyData []interface{}
 
 type errorResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Error struct {
+		Message string `json:"message"`
+		Code    int    `json:"code"`
+	} `json:"error"`
 }
 
-type successResponse struct {
-	Code int         `json:"code"`
-	Data interface{} `json:"data"`
-}
-
-// NewClient creates new Facest.io client with given API key
+// NewClient returns QSM client with given URL
 func NewClient(ip string) *Client {
 	return &Client{
 		HTTPClient: &http.Client{},
@@ -51,10 +53,6 @@ func NewClient(ip string) *Client {
 	}
 }
 
-// NewRequest creates an API request. A relative URL can be provided in urlStr, which will be resolved to the
-// BaseURL of the Client. Relative URLS should always be specified without a preceding slash. If specified, the
-// value pointed to by body is JSON encoded and included in as the request body.
-// func (c *Client) NewRequest(ctx context.Context, method, urlPath string, body interface{}) (*http.Request, error) {
 func (c *Client) NewRequest(ctx context.Context, method, urlPath string, body url.Values) (*http.Request, error) {
 	var (
 		req *http.Request
@@ -79,15 +77,9 @@ func (c *Client) NewRequest(ctx context.Context, method, urlPath string, body ur
 		return nil, err
 	}
 
-	// req.Header.Add("Content-Type", mediaType)
-	// req.Header.Add("Accept", mediaType)
-	// req.Header.Add("User-Agent", c.UserAgent)
-	// req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	// req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	return req, nil
 }
 
-// Content-type and body should be already added to req
 func (c *Client) sendRequest(ctx context.Context, req *http.Request, v interface{}) error {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	if c.apiKey != "" {
@@ -106,9 +98,9 @@ func (c *Client) sendRequest(ctx context.Context, req *http.Request, v interface
 
 	glog.V(2).Infof("[sendRequest] StatusCode: %d\n", res.StatusCode)
 	if res.StatusCode != http.StatusOK {
-		var errRes errorResponse
+		errRes := errorResponse{}
 		if err = json.NewDecoder(res.Body).Decode(&errRes); err == nil {
-			return errors.New(errRes.Message)
+			return errors.New(errRes.Error.Message)
 		}
 
 		return fmt.Errorf("unknown error, status code: %d", res.StatusCode)

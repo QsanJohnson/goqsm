@@ -1,3 +1,5 @@
+// @2022 QSAN Inc. All rights reserved
+
 package goqsm
 
 import (
@@ -10,6 +12,7 @@ type SystemOp struct {
 	client *Client
 }
 
+// The response data of GetAbout method
 type AboutData struct {
 	Addresses []struct {
 		Address string `json:"address"`
@@ -23,11 +26,12 @@ type AboutData struct {
 	Wwn          string `json:"wwn"`
 }
 
-//NewSystem function returns system operation
+// NewSystem returns system operation
 func NewSystem(client *Client) *SystemOp {
 	return &SystemOp{client}
 }
 
+// GetAbout get system information without authentication
 func (s *SystemOp) GetAbout(ctx context.Context) (*AboutData, error) {
 	req, err := s.client.NewRequest(ctx, http.MethodGet, "/rest/v1/about", nil)
 	if err != nil {

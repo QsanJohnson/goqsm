@@ -7,34 +7,31 @@ import (
 	"time"
 )
 
-// var poolId string
-// var volName string
-// var volSize uint64
-
 func TestVolume(t *testing.T) {
 	fmt.Println("------------TestVolume--------------")
 
 	now := time.Now()
-	timeStamp := now.Format("20220101000000")
+	timeStamp := now.Format("20060102150405")
 	volName := "gotest-vol-" + timeStamp
-	poolId := "14595646129689353715"
+	scId := testConf.scId
 	var volSize uint64 = 1024
+	fmt.Printf("TestConf: scId=%s, volName=%s\n", scId, volName)
 
 	ctx = context.Background()
 
-	listVolumesTest(t, poolId)
+	listVolumesTest(t, scId)
 
-	volId := createVolumeTest(t, poolId, volName, volSize)
-	exportVolumeTest(t, poolId, volId)
-	unexportVolumeTest(t, poolId, volId)
-	deleteVolumeTest(t, poolId, volId)
+	volId := createVolumeTest(t, scId, volName, volSize)
+	exportVolumeTest(t, scId, volId)
+	unexportVolumeTest(t, scId, volId)
+	deleteVolumeTest(t, scId, volId)
 
 }
 
-func createVolumeTest(t *testing.T, poolId, volName string, volSize uint64) string {
+func createVolumeTest(t *testing.T, scId, volName string, volSize uint64) string {
 	fmt.Println("createVolumeTest Enter")
 
-	vol, err := testConf.volumeOp.CreateVolume(ctx, poolId, volName, volSize)
+	vol, err := testConf.volumeOp.CreateVolume(ctx, scId, volName, volSize)
 	if err != nil {
 		t.Fatalf("createVolume failed: %v", err)
 	}
@@ -45,10 +42,10 @@ func createVolumeTest(t *testing.T, poolId, volName string, volSize uint64) stri
 	return vol.ID
 }
 
-func deleteVolumeTest(t *testing.T, poolId, volId string) {
+func deleteVolumeTest(t *testing.T, scId, volId string) {
 	fmt.Println("deleteVolumeTest Enter")
 
-	err := testConf.volumeOp.DeleteVolume(ctx, poolId, volId)
+	err := testConf.volumeOp.DeleteVolume(ctx, scId, volId)
 	if err != nil {
 		t.Fatalf("DeleteVolume failed: %v", err)
 	}
@@ -57,10 +54,10 @@ func deleteVolumeTest(t *testing.T, poolId, volId string) {
 	fmt.Println("deleteVolumeTest Leave")
 }
 
-func listVolumesTest(t *testing.T, poolId string) {
+func listVolumesTest(t *testing.T, scId string) {
 	fmt.Println("listVolumesTest Enter")
 
-	vols, err := testConf.volumeOp.ListVolumes(ctx, poolId, "")
+	vols, err := testConf.volumeOp.ListVolumes(ctx, scId, "")
 	if err != nil {
 		t.Fatalf("ListVolumes failed: %v", err)
 	}
@@ -68,7 +65,7 @@ func listVolumesTest(t *testing.T, poolId string) {
 	fmt.Printf("volume count: %d \n", len(*vols))
 	for _, v := range *vols {
 		fmt.Println("  ID:", v.ID, ", Name:", v.Name, ", VMPath:", v.VMPath)
-		vol, err := testConf.volumeOp.ListVolumes(ctx, poolId, v.ID)
+		vol, err := testConf.volumeOp.ListVolumes(ctx, scId, v.ID)
 		if err != nil {
 			t.Fatalf("ListVolumes failed with volId %s: %v", v.ID, err)
 		}
@@ -80,10 +77,10 @@ func listVolumesTest(t *testing.T, poolId string) {
 	fmt.Println("listVolumesTest Leave")
 }
 
-func exportVolumeTest(t *testing.T, poolId, volId string) {
+func exportVolumeTest(t *testing.T, scId, volId string) {
 	fmt.Println("exportVolumeTest Enter")
 
-	err := testConf.volumeOp.ExportVolume(ctx, poolId, volId)
+	err := testConf.volumeOp.ExportVolume(ctx, scId, volId)
 	if err != nil {
 		t.Fatalf("ExportVolume failed: %v", err)
 	}
@@ -92,10 +89,10 @@ func exportVolumeTest(t *testing.T, poolId, volId string) {
 	fmt.Println("exportVolumeTest Leave")
 }
 
-func unexportVolumeTest(t *testing.T, poolId, volId string) {
+func unexportVolumeTest(t *testing.T, scId, volId string) {
 	fmt.Println("unexportVolumeTest Enter")
 
-	err := testConf.volumeOp.UnexportVolume(ctx, poolId, volId)
+	err := testConf.volumeOp.UnexportVolume(ctx, scId, volId)
 	if err != nil {
 		t.Fatalf("UnexportVolume failed: %v", err)
 	}

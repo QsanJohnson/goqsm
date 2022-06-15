@@ -1,3 +1,5 @@
+// @2022 QSAN Inc. All rights reserved
+
 package goqsm
 
 import (
@@ -12,6 +14,7 @@ type VolumeOp struct {
 	client *AuthClient
 }
 
+// The response data of volume related methods, ex ListVolumes and CreateVolume.
 type VolumeData struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
@@ -22,12 +25,14 @@ type VolumeData struct {
 	UsedMB  int    `json:"usedMB"`
 }
 
+// NewVolume returns volume operation
 func NewVolume(client *AuthClient) *VolumeOp {
 	return &VolumeOp{client}
 }
 
-func (v *VolumeOp) ListVolumes(ctx context.Context, poolId, volId string) (*[]VolumeData, error) {
-	req, err := v.client.NewRequest(ctx, http.MethodGet, "/rest/internal/cloud/containers/"+poolId+"/vols/"+volId, nil)
+// ListVolumes list all volumes or a dedicated volume with volId
+func (v *VolumeOp) ListVolumes(ctx context.Context, scId, volId string) (*[]VolumeData, error) {
+	req, err := v.client.NewRequest(ctx, http.MethodGet, "/rest/internal/cloud/containers/"+scId+"/vols/"+volId, nil)
 
 	if err != nil {
 		return nil, err
@@ -41,12 +46,13 @@ func (v *VolumeOp) ListVolumes(ctx context.Context, poolId, volId string) (*[]Vo
 	return &res, nil
 }
 
-func (v *VolumeOp) CreateVolume(ctx context.Context, poolId, name string, size uint64) (*VolumeData, error) {
+// CreateVolume create a volume on a storage container
+func (v *VolumeOp) CreateVolume(ctx context.Context, scId, name string, size uint64) (*VolumeData, error) {
 	params := url.Values{}
 	params.Add("name", name)
 	params.Add("sizeMB", strconv.FormatUint(size, 10))
 
-	req, err := v.client.NewRequest(ctx, http.MethodPost, "/rest/internal/cloud/containers/"+poolId+"/vols", params)
+	req, err := v.client.NewRequest(ctx, http.MethodPost, "/rest/internal/cloud/containers/"+scId+"/vols", params)
 	if err != nil {
 		return nil, err
 	}
@@ -59,8 +65,9 @@ func (v *VolumeOp) CreateVolume(ctx context.Context, poolId, name string, size u
 	return &res, nil
 }
 
-func (v *VolumeOp) DeleteVolume(ctx context.Context, poolId, volId string) error {
-	req, err := v.client.NewRequest(ctx, http.MethodDelete, "/rest/internal/cloud/containers/"+poolId+"/vols/"+volId, nil)
+// DeleteVolume delete a volume from a storage container
+func (v *VolumeOp) DeleteVolume(ctx context.Context, scId, volId string) error {
+	req, err := v.client.NewRequest(ctx, http.MethodDelete, "/rest/internal/cloud/containers/"+scId+"/vols/"+volId, nil)
 	if err != nil {
 		return err
 	}
@@ -73,8 +80,9 @@ func (v *VolumeOp) DeleteVolume(ctx context.Context, poolId, volId string) error
 	return nil
 }
 
-func (v *VolumeOp) ExportVolume(ctx context.Context, poolId, volId string) error {
-	req, err := v.client.NewRequest(ctx, http.MethodPost, "/rest/internal/cloud/containers/"+poolId+"/vols/"+volId+"/share", nil)
+// ExportVolume export a NFS volume
+func (v *VolumeOp) ExportVolume(ctx context.Context, scId, volId string) error {
+	req, err := v.client.NewRequest(ctx, http.MethodPost, "/rest/internal/cloud/containers/"+scId+"/vols/"+volId+"/share", nil)
 	if err != nil {
 		return err
 	}
@@ -87,8 +95,9 @@ func (v *VolumeOp) ExportVolume(ctx context.Context, poolId, volId string) error
 	return nil
 }
 
-func (v *VolumeOp) UnexportVolume(ctx context.Context, poolId, volId string) error {
-	req, err := v.client.NewRequest(ctx, http.MethodDelete, "/rest/internal/cloud/containers/"+poolId+"/vols/"+volId+"/share", nil)
+// UnexportVolume unexport a NFS volume
+func (v *VolumeOp) UnexportVolume(ctx context.Context, scId, volId string) error {
+	req, err := v.client.NewRequest(ctx, http.MethodDelete, "/rest/internal/cloud/containers/"+scId+"/vols/"+volId+"/share", nil)
 	if err != nil {
 		return err
 	}
