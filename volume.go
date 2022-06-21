@@ -21,8 +21,8 @@ type VolumeData struct {
 	IntName string `json:"intName"`
 	NaaID   string `json:"naaId"`
 	VMPath  string `json:"vmPath"`
-	SizeMB  int    `json:"sizeMB"`
-	UsedMB  int    `json:"usedMB"`
+	SizeMB  uint64 `json:"sizeMB"`
+	UsedMB  uint64 `json:"usedMB"`
 }
 
 // NewVolume returns volume operation
