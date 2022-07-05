@@ -4,6 +4,7 @@ package goqsm
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -23,6 +24,13 @@ type VolumeData struct {
 	VMPath  string `json:"vmPath"`
 	SizeMB  uint64 `json:"sizeMB"`
 	UsedMB  uint64 `json:"usedMB"`
+}
+
+type VolumeCreateOptions struct {
+	BlockSize uint   // recordsize: 1024, 2048 ..., 65536
+	Provision string // "thin" or "thick"
+	Compress  string // "on", "off", "genericzero", "empty" or "lz4"
+	Dedup     bool   // true: enable dedup, otherwise disable
 }
 
 // NewVolume returns volume operation
@@ -47,10 +55,28 @@ func (v *VolumeOp) ListVolumes(ctx context.Context, scId, volId string) (*[]Volu
 }
 
 // CreateVolume create a volume on a storage container
-func (v *VolumeOp) CreateVolume(ctx context.Context, scId, name string, size uint64) (*VolumeData, error) {
+func (v *VolumeOp) CreateVolume(ctx context.Context, scId, name string, size uint64, options *VolumeCreateOptions) (*VolumeData, error) {
 	params := url.Values{}
 	params.Add("name", name)
 	params.Add("sizeMB", strconv.FormatUint(size, 10))
+
+	var optionMap map[string]interface{}
+	data, _ := json.Marshal(options)
+	json.Unmarshal(data, &optionMap)
+	// 'int' type will become 'float64' type after struct to map[string]interface{} conversion
+	if optionMap["BlockSize"] != float64(0) {
+		v := uint64(optionMap["BlockSize"].(float64))
+		params.Add("blockSize", strconv.FormatUint(v, 10))
+	}
+	if optionMap["Provision"] != "" {
+		params.Add("provision", optionMap["Provision"].(string))
+	}
+	if optionMap["Compress"] != "" {
+		params.Add("compress", optionMap["Compress"].(string))
+	}
+	if optionMap["Dedup"] == true {
+		params.Add("dedup", "on")
+	}
 
 	req, err := v.client.NewRequest(ctx, http.MethodPost, "/rest/internal/cloud/containers/"+scId+"/vols", params)
 	if err != nil {
