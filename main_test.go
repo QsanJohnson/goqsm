@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 type testConfig struct {
@@ -64,7 +65,8 @@ func TestMain(m *testing.M) {
 }
 
 func getTestClient(ip string) *Client {
-	return NewClient(ip)
+	opt := ClientOptions{ReqTimeout: 60 * time.Second}
+	return NewClient(ip, opt)
 }
 
 func readTestConf(filename string) (map[string]string, error) {
