@@ -21,6 +21,7 @@ type testConfig struct {
 	scId     string
 	systemOp *SystemOp
 	volumeOp *VolumeOp
+	targetOp *TargetOp
 }
 
 var testConf *testConfig
@@ -58,6 +59,7 @@ func TestMain(m *testing.M) {
 
 	testConf.systemOp = NewSystem(testClient)
 	testConf.volumeOp = NewVolume(testAuthClient)
+	testConf.targetOp = NewTarget(testAuthClient)
 
 	code := m.Run()
 	fmt.Println("------------End of TestMain--------------")

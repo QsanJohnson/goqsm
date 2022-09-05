@@ -69,7 +69,9 @@ func NewClient(ip string, opts ClientOptions) *Client {
 	return client
 }
 
-func (c *Client) NewRequest(ctx context.Context, method, urlPath string, body url.Values) (*http.Request, error) {
+// If body format is url.Values, then body data will be sent using x-www-form-urlencoded format.
+// If body format is string, then body data will be sent using raw data with JSON format.
+func (c *Client) NewRequest(ctx context.Context, method, urlPath string, body interface{}) (*http.Request, error) {
 	var (
 		req *http.Request
 		err error
@@ -84,9 +86,20 @@ func (c *Client) NewRequest(ctx context.Context, method, urlPath string, body ur
 
 	if body != nil {
 		glog.V(3).Infof("[NewRequest] body: %v\n", body)
-		req, err = http.NewRequest(method, u.String(), strings.NewReader(body.Encode()))
+		switch body := body.(type) {
+		case url.Values:
+			req, err = http.NewRequest(method, u.String(), strings.NewReader(body.Encode()))
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		case string:
+			// raw data
+			req, err = http.NewRequest(method, u.String(), strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+		default:
+			return nil, fmt.Errorf("Unknow body format! Only url.Values and string formats are supported.\n")
+		}
 	} else {
 		req, err = http.NewRequest(method, u.String(), nil)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 
 	if err != nil {
@@ -164,7 +177,6 @@ func (c *Client) SendRequest(ctx context.Context, req *http.Request, v interface
 }
 
 func (c *Client) doSendRequest(ctx context.Context, req *http.Request, v interface{}) (*http.Response, error) {
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	if c.apiKey != "" {
 		glog.V(5).Infof("[doSendRequest] apiKey: %s\n", c.apiKey)
 		req.Header.Set("Authorization", c.apiKey)
