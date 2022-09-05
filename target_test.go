@@ -22,7 +22,7 @@ func createTargetTest(t *testing.T) {
 		Iscsi: Iscsi{
 			Eths: []string{"c0e1", "c0e2"},
 		},
-		HostGroup: []HostGroup{
+		HostGroups: []HostGroup{
 			{
 				Name:  "test_group6",
 				Hosts: []Host{{Name: []string{"*"}}},
